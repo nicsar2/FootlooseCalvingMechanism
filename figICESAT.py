@@ -220,7 +220,7 @@ def TimeSerieRaw(plotVelocity=True): #Time series of the ICESat transect front p
 	plt.close(fig=fig)
 	
 def TimeSeriesRM(plotVelocity=True): #FIGURE 2: Time series of the ICESat transect front positions and elevations colored
-	figTitle = "ICESAT1_" + it.stack()[0][3]
+	figTitle = "Figure_2"
 	fig = plt.figure(figsize=(16,16), constrained_layout=True)
 	gs = fig.add_gridspec(3, 1)
 	ax1 = fig.add_subplot(gs[0,0])
@@ -305,8 +305,6 @@ def TimeSeriesRM(plotVelocity=True): #FIGURE 2: Time series of the ICESat transe
 	fig.savefig(f"{figPath}{title}.png", dpi=300)
 	plt.close(fig=fig)
 
-
-
 def TimeSerieColors(): #Time series of the ICESat transect front positions and elevations colored
 	import dataMEaSUREs2 as dVEL
 	figTitle = "ICESAT1_" + it.stack()[0][3]
@@ -390,7 +388,7 @@ def TimeSerieColors(): #Time series of the ICESat transect front positions and e
 	ax.text(2007.5, 4.3, "V-M", color="b", fontsize=30)
 	ax.plot([2007]*15, np.linspace(2.6, 3.6 ,15), "r", linestyle=":", linewidth=3)
 	ax.text(2007.05,3.1,"C",color="r", fontsize=30)
-	d = dVEL.get1Data()
+	d = dVEL.getDataBand()
 	lon = 179
 	vel = d.sel(lon=lon, method="nearest").values
 	print("measure",vel)

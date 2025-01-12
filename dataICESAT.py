@@ -1,11 +1,27 @@
+import os
+import zipfile
 import pandas as pd
 import numpy as np
 import scipy as sp
 import glob as gl
+import subprocess as ss
 
 from params import dataPath, rhoi, rhow, Rt, rhotio
 
 dataDir = "ICESat1/"
+
+def download(): 
+	savePath = dataPath + dataDir
+	os.makedirs(savePath, exist_ok=True)
+
+	if not os.path.isfile(savePath + "ICESat1_RIS_Front_Elevation_TimeSeries.zip"):
+		cmd = f"wget -nc -P {savePath}  -i ./download/ICESat1_url.txt"
+		ss.run(cmd, shell=True)
+
+	if os.path.isfile(savePath + "ICESat1_RIS_Front_Elevation_TimeSeries.zip"):
+		with zipfile.ZipFile(savePath + "ICESat1_RIS_Front_Elevation_TimeSeries.zip", 'r') as zip_ref:
+			zip_ref.extractall(savePath)
+		
 
 def getData():
 	File = sorted(gl.glob(dataPath+dataDir+'*.txt'))

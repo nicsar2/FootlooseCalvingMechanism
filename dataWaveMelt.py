@@ -8,7 +8,6 @@ import dataCDRPMSIC4 as dSIC
 import physics as ps
 
 from params import dataPath #Directory in dataPath where this dataset is stored
-
 dataDir = "_WaveMelt/"
 
 def getData(latSlice=None, lonSlice=None, months=None, years=None, maskIte=50, keepVar=False): #Combine SST, SIC, wind data to compute frontal wave-induced melt rate
@@ -25,14 +24,15 @@ def getData(latSlice=None, lonSlice=None, months=None, years=None, maskIte=50, k
 	ds['C'] = xe.Regridder(dsSIC, ds, 'nearest_s2d')(dsSIC['C'], keep_attrs=False)
 	ds['w'] = xe.Regridder(dsERA, ds, 'nearest_s2d')(dsERA['w'], keep_attrs=False)
 	ds['Me'] = ps.Me(ds)*365.25*24*3600
+	ds['MeRed'] = ps.MeRed(ds)*365.25*24*3600
 	ds["maskSIC"] = (ds.C < 2).isel(time=0)
 	if not keepVar:
 		ds = ds.drop_vars(["C", "w"])
 
 	return ds, dsSIC, dsERA
 
-def getDataBand(): #Melt data 2D as function of lon/time
-	fileName = 'data.pkl'
+def getDataBand(meltEq="C1"): #Melt data 2D as function of lon/time
+	fileName = f'data_{meltEq}.pkl'
 	savePath = dataPath + dataDir
 
 	os.makedirs(savePath, exist_ok=True)
@@ -47,9 +47,15 @@ def getDataBand(): #Melt data 2D as function of lon/time
 		months = range(1, 13)
 		ds = getData(latSlice=latSlice, lonSlice=lonSlice, months=months, maskIte=50)[0]
 		S = ds.S.where(ds.maskSIC).where(ds.maskFront).sum('lat')
-		ds = ((ds.S*ds.Me).where(ds.maskSIC).where(ds.maskFront).sum('lat')) / S
+		if meltEq == "C1":
+			ds = ((ds.S*ds.MeRed).where(ds.maskSIC).where(ds.maskFront).sum('lat')) / S
+		elif meltEq == "C3":
+			ds = ((ds.S*ds.Me).where(ds.maskSIC).where(ds.maskFront).sum('lat')) / S
+		else:
+			raise ValueError("")
 		ds["S"] = S
 		print("GHRSST Make Pickle ~ dataBand")
 		pd.to_pickle(ds.load(), savePath + fileName)
 		return ds
+
 

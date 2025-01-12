@@ -6,7 +6,7 @@ This code aims to recreate the figures in 'Sartore et al. (2024)' paper.
 	- Install python version 3.8 or above: See doc for specific OS
 	- Install miniconda: See doc for specific OS
 	- Install dependencies: conda env create -f environment.yml
-	- Add Copernicus API keys for cdsapi package: see "Install the CDS API key" at https://cds.climate.copernicus.eu/api-how-to
+	- Add Copernicus API keys for cdsapi package: see "Install the CDS API key" at https://cds.climate.copernicus.eu/how-to-api
 	- Add Earthdata Login keys for podaac-data-subscriber package: see step 1 and 2 at https://github.com/podaac/data-subscriber
 	- Activate conda environment: conda activate sartore24FigureEnv
 	- Run: python3 main.py

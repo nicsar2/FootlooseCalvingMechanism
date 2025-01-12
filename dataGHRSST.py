@@ -21,7 +21,7 @@ def download():#Download ERA5 wind data
 	savePath = dataPath + dataDir + 'Raw/'
 	os.makedirs(savePath,  exist_ok=True)
 	minYear, maxYear = 2003, 2022
-	for _ in range(3):
+	for _ in range(0):
 		for year in range(minYear, maxYear+1):
 			for month in range(1, 13):
 				nbDays = getNumberDays(year,month)

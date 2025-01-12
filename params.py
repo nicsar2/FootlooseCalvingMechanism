@@ -1,5 +1,5 @@
-dataPath = './Data/' #Path to data
-figPath = './Fig/' #Path to figure
+dataPath = '/home/sartore/Documents/Data/' #Path to data
+figPath = 'Fig/' #Path to figure
 minLon = 150 #Minimum longitude to shrink data when downloading
 maxLon = 210 #Maximum longitude to shrink data when downloading
 minLat = -89 #Minimum latitude to shrink data when downloading

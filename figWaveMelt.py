@@ -19,6 +19,7 @@ plt.rc('xtick', labelsize=21)   # fontsize of the tick labels
 plt.rc('ytick', labelsize=21)   # fontsize of the tick labels
 plt.rc('legend', fontsize=24)   # legend fontsize
 plt.rc('figure', titlesize=24)  # fontsize of the figure title
+figSupName = "WaveMelt_"
 
 
 def compareRegridData(): #Map plots at every time of the SIC and wind speed raw data with the reggridded to the SST grid.
@@ -133,7 +134,7 @@ def mapsSnapshots(): #Map plots at every time of SST, SIC, wind speed, and melt 
 			plt.close(fig=fig)
 
 def mapsWinterMean(): #Map plot of temporal January mean for SST, SIC, wind speed, and melt rate.
-	figTitle = it.stack()[0][3]
+	figTitle = "Figure_3"
 
 	latSlice = slice(-82,-69)
 	lonSlice = slice(160, 210)
@@ -193,61 +194,58 @@ def mapsWinterMean(): #Map plot of temporal January mean for SST, SIC, wind spee
 	ax4.annotate("d)", xy=(163.8, -70.5),color="white", xycoords=crs.PlateCarree()._as_mpl_transform(ax4), ha="left", va="top", zorder=99)
 
 	fig.canvas.manager.full_screen_toggle()
-	title = f"{figTitle}.png"
+	title = f"{figTitle}"
 	fig.savefig(f"{figPath}{title}.png", dpi=300)
 	plt.close(fig=fig)
 
 def climatology(): #Climatology of the spatial averaged melt
-	figTitle = it.stack()[0][3]
-
-	maskIte = 50
-	latSlice = slice(-79,-76)
-	lonSlice = slice(160, 205)
-	months = [8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7]
-	years = range(2003, 2023)
-
-	ds, _, _ = dt.getData(latSlice=latSlice, lonSlice=lonSlice, months=months, years=years, maskIte=maskIte)
-
-	Me = ((ds.S*ds.Me).where(ds.maskFront).where(ds.maskSIC).sum(['lat','lon'])) / (ds.S.where(ds.maskFront).where(ds.maskSIC).sum(['lat','lon']))
-	MeClim = {month:[] for month in months}
-
-	for month in months:
-		MeClim[month] += Me.sel(time=[np.datetime64(f'{year}-{month:02d}-01') for year in years]).values.tolist()
-
-	fig = plt.figure(figsize=(12,9), constrained_layout=True)
+	figName = "Figure_8"
+	fig = plt.figure(figsize=(12, 9), constrained_layout=True)
 	ax = fig.add_subplot()
-	ax.plot(range(1,13), [np.mean(MeClim[m]) for m in months],"-bs", zorder=5, label="Melt")
 
-	mean = []
-	for m in months:
-		mean += MeClim[m]
-	mean = np.mean(mean)
-	ax.plot([1,12],[mean]*2,"-r",label=f"Mean: {mean:.0f} m/yr")
+	d = dt.getDataBand(meltEq="C1")
+	d = ((d.S*d).sum('lon')) / d.S.sum('lon')
+	dd = d.groupby("time.month")
+	d2 = dt.getDataBand(meltEq="C3")
+	d2 = ((d2.S*d2).sum('lon')) / d2.S.sum('lon')
+	dd2 = d2.groupby("time.month")
 
-	ax.fill_between(range(1,13), [np.min(MeClim[m]) for m in months], [np.max(MeClim[m]) for m in months], color="grey", alpha=0.2, zorder=3, label="Min-Max")
-	ax.fill_between(range(1,13), [np.mean(MeClim[m]) - np.std(MeClim[m]) for m in months]	, [np.mean(MeClim[m]) + np.std(MeClim[m]) for m in months], color="grey", alpha=0.2, zorder=3, label="Standard deviation")
+	meanTime = [dd.mean("time").sel(month=m) for m in [8,9,10,11,12,1,2,3,4,5,6,7]]
+	stdTime = [dd.std("time").sel(month=m) for m in [8,9,10,11,12,1,2,3,4,5,6,7]]
 
-	ax.set_xlabel("Time",size=25)
-	ax.set_ylabel("Melt rate (m/yr)",size=25)
+	ax.plot(range(1,13), meanTime,"-o", color="tab:blue", zorder=5,markersize=11, label="Clim. melt (revised)",  linewidth=2)
+	ax.plot(range(1,13), [dd2.mean("time").sel(month=m) for m in [8,9,10,11,12,1,2,3,4,5,6,7]],":",color="gray", zorder=5, label="Clim. melt (original)")
+	ax.fill_between(range(1,13), [meanTime[i] - stdTime[i] for i in range(len(stdTime))], [meanTime[i] + stdTime[i] for i in range(len(stdTime))], color="tab:blue", alpha=0.1, zorder=3)
+
+	ax.plot([1,12], [d.mean("time")]*2,color="tab:blue", linewidth=3)
+	ax.plot([1,12], [d2.mean("time")]*2,":",color="gray")
+
+	ax.text(8.5, d2.mean('time')+2, f"Ann. mean melt: {d2.mean('time'):.0f} m/yr", fontsize=16, color="gray")
+	ax.text(8.5, d.mean('time')-9, f"Ann. mean melt: {d.mean('time'):.0f} m/yr", fontsize=16,color="tab:blue")
+	ax.set_ylabel(r"Melt rate (m/yr)")
 	ax.set_ylim(0, 350)
-	ax.set_xticks([1, 3, 5, 7, 9, 11])
-	ax.legend()
-	ax.set_xticklabels(["August", "October", "December", "February", "April", "June"])
+	ax.set_xticks([1, 4, 7, 10, 12])
+	ax.set_yticks([0, 100, 200, 300])
+	ax.legend(fontsize=22)
+	ax.set_xticklabels(["August", "November", "February", "May", "July"])
 	
 	fig.canvas.manager.full_screen_toggle()
-	title = f"{figTitle}.png"
-	fig.savefig(f"{figPath}{title}.png", dpi=300)
+	fig.savefig(f"{figPath}{figName}.png", dpi=300)
 	plt.close(fig=fig)
 
 def alongFrontMeltPerMonths(): #Climatology of the melt along RIS for every months
-	figTitle = it.stack()[0][3]
+	figTitle = "Figure_A5"
 	fig = plt.figure(figsize=(12,9), constrained_layout=True)
 	ax = fig.add_subplot()
+
+	monthLabels = {1:"Jan", 2:"Feb", 3:"Mar", 4:"Apr",\
+		5:"May", 6:"Jun", 7:"Jul", 8:"Aug",\
+		9:"Sep", 10:"Oct", 11:"Nov", 12:"Dec"}
 
 	d = dt.getDataBand()
 	d = d.groupby("time.month").mean("time")
 	col = cc.cm.CET_R1(np.linspace(0,1,12))
-	for i,month in enumerate([7,8,9,10,11,12,1,2,3,4,5,6]):
+	for i, month in enumerate([7,8,9,10,11,12,1,2,3,4,5,6]):
 		X = d.lon.values
 		Y = d.sel(month=month).values
 		mask = np.logical_not(np.isnan(Y))
@@ -258,88 +256,13 @@ def alongFrontMeltPerMonths(): #Climatology of the melt along RIS for every mont
 		b, a = sp.signal.butter(3, 0.003)
 		y = sp.signal.filtfilt(b, a, y)
 		
-		ax.plot(x, y, color=col[i], label=month)
+		ax.plot(x, y, color=col[i], label=monthLabels[month])
 
 	ax.legend()
 	ax.set_xlabel("Longitude (°)")
-	ax.set_ylabel(r"Melt ($m.yr^{-1}$)")
+	ax.set_ylabel(r"Melt ($m\,yr^{-1}$)")
 	fig.canvas.manager.full_screen_toggle()
-	title = f"{figTitle}_.png"
+	title = f"{figTitle}."
 	fig.savefig(f"{figPath}{title}.png", dpi=300)
 	plt.close(fig=fig)
 
-def combinedClimatology(): #FIGURE 7: climatology + alongFrontMeltPerMonths combined
-	figTitle = it.stack()[0][3]
-	fig = plt.figure(figsize=(20, 9), constrained_layout=True)
-	gs = fig.add_gridspec(1, 2, width_ratios=[1.4, 1], wspace=0.010)
-	ax1 = fig.add_subplot(gs[0,0])
-	ax2 = fig.add_subplot(gs[0,1])
-
-	d = dt.getDataBand()
-	d = d.groupby("time.month").mean("time")
-	monthLabels={1:"Jan", 2:"Feb", 3:"Mar", 4:"Apr",\
-		5:"May", 6:"Jun", 7:"Jul", 8:"Aug",\
-		9:"Sep", 10:"Oct", 11:"Nov", 12:"Dec"}
-
-	col = plt.cm.jet(np.linspace(0, 1, 12))
-
-	for i, month in enumerate([1,2,3,4,5,6,7,8,9,10,11,12]):
-		X = d.lon.values
-		Y = d.sel(month=month).values
-		S = d.S.values
-		mask = np.logical_not(np.isnan(Y))
-		X, Y, S = X[mask], Y[mask], S[mask]
-		
-		x = np.linspace(X.min(), X.max(), 20000)
-		y = np.interp(x, X, Y, right=np.nan)
-		b, a = sp.signal.butter(3, 0.003)
-		y = sp.signal.filtfilt(b, a, y)
-		
-		ax1.plot(x, y, color=col[i], label=monthLabels[month])
-		# ax1.scatter([200], [(Y*S).sum()/(S.sum())], marker="s", color=col[i])
-
-	ax1.legend(ncol=3)
-	ax1.set_ylim(0, 500)
-	ax1.set_xlabel("Longitude (° E)")
-	ax1.set_ylabel(r"Melt rate (m/yr)")
-	ax1.set_yticks([0, 100, 200, 300, 400, 500])
-	ax1.annotate("a)", xy=(ax1.get_xlim()[0], ax1.get_ylim()[1]), xytext=(3, -4),textcoords='offset points', ha="left", va="top")
-
-	maskIte = 50
-	latSlice = slice(-79,-76)
-	lonSlice = slice(160, 205)
-	months = [8, 9, 10, 11, 12, 1, 2, 3, 4, 5, 6, 7]
-	years = range(2003, 2023)
-
-	ds, _, _ = dt.getData(latSlice=latSlice, lonSlice=lonSlice, months=months, years=years, maskIte=maskIte)
-
-	Me = ((ds.S*ds.Me).where(ds.maskFront).where(ds.maskSIC).sum(['lat','lon'])) / (ds.S.where(ds.maskFront).where(ds.maskSIC).sum(['lat','lon']))
-	MeClim = {month:[] for month in months}
-
-	for month in months:
-		MeClim[month] += Me.sel(time=[np.datetime64(f'{year}-{month:02d}-01') for year in years]).values.tolist()
-
-	ax2.plot(range(1,13), [np.mean(MeClim[m]) for m in months],"-k", zorder=5)
-	ax2.scatter(range(1,13), [np.mean(MeClim[m]) for m in months], marker="s", color=np.roll(col,5,axis=0), zorder=6, label="Melt")
-
-	mean = []
-	for m in months:
-		mean += MeClim[m]
-	mean = np.mean(mean)
-	ax2.plot([1,12],[mean]*2,"-r",label=f"Mean: {mean:.0f} m/yr")
-
-	ax2.fill_between(range(1,13), [np.min(MeClim[m]) for m in months], [np.max(MeClim[m]) for m in months], color="grey", alpha=0.2, zorder=3, label="Min-Max")
-	ax2.fill_between(range(1,13), [np.mean(MeClim[m]) - np.std(MeClim[m]) for m in months]	, [np.mean(MeClim[m]) + np.std(MeClim[m]) for m in months], color="grey", alpha=0.2, zorder=3, label="Standard deviation")
-
-	ax2.set_ylim(0, 500)
-	ax2.set_xticks([1, 4, 7, 10, 12])
-	ax2.set_yticks([0, 100, 200, 300, 400, 500])
-	ax2.set_yticklabels(["", "", "", "", "", ""])
-	ax2.legend()
-	ax2.set_xticklabels(["August", "November", "February", "May", "July"])
-	ax2.annotate("b)", xy=(ax2.get_xlim()[0], ax2.get_ylim()[1]), xytext=(3, -4),textcoords='offset points', ha="left", va="top")
-	
-	fig.canvas.manager.full_screen_toggle()
-	title = f"{figTitle}.png"
-	fig.savefig(f"{figPath}{title}.png", dpi=300)
-	plt.close(fig=fig)
